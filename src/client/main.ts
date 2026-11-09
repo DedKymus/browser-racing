@@ -1,4 +1,4 @@
-import * as engine from './core/engine'
+import * as engine from './engine'
 
 const appContainer = document.getElementById("app");
 if (!appContainer) {

@@ -48,14 +48,21 @@ export class Car {
         }
 
         this.heading = Math.max(-this.MaxHeading, Math.min(this.MaxHeading, this.heading));
-
-
     }
 
+    public toState(): types.CarState {
+        return { position: { x: this.x, z: this.z }, heading: this.heading, speed: this.speed }
+    }
 
+    public applyState(state: types.CarState): void {
+        this.x = state.position.x
+        this.z = state.position.z
+        this.heading = state.heading
+        this.speed = state.speed
+    }
 }
 
-export function  resolveCarCollision(carA: Car, carB: Car) {
+export function resolveCarCollision(carA: Car, carB: Car) {
     const dx = carA.x - carB.x;
     const dz = carA.z - carB.z;
 
@@ -68,8 +75,8 @@ export function  resolveCarCollision(carA: Car, carB: Car) {
 
     if (overlapX < overlapZ) {
         const pushDirectionX = dx >= 0 ? 1 : -1;
-        carA.x += (overlapX / 2 ) * pushDirectionX;
-        carB.x -= (overlapX / 2 ) * pushDirectionX;
+        carA.x += (overlapX / 2) * pushDirectionX;
+        carB.x -= (overlapX / 2) * pushDirectionX;
 
         const sideSpeedA = -Math.sin(carA.heading) * carA.speed;
         const sideSpeedB = -Math.sin(carB.heading) * carB.speed;
@@ -79,10 +86,10 @@ export function  resolveCarCollision(carA: Car, carB: Car) {
         carB.pushVx = sideImpact * 0.6 - pushDirectionX * 6;
         carA.heading *= 0.3;
         carB.heading *= 0.3;
-    }else {
+    } else {
         const pushDirectionZ = dz >= 0 ? 1 : -1;
-        carA.z += (overlapZ / 2 ) * pushDirectionZ;
-        carB.z -= (overlapZ / 2 ) * pushDirectionZ;
+        carA.z += (overlapZ / 2) * pushDirectionZ;
+        carB.z -= (overlapZ / 2) * pushDirectionZ;
 
         if (pushDirectionZ > 0) {
             carB.speed = Math.max(carB.speed, carA.speed * 1.05);
@@ -92,4 +99,5 @@ export function  resolveCarCollision(carA: Car, carB: Car) {
             carB.speed *= 0.85;
         }
     }
+
 }

@@ -1,3 +1,5 @@
+import type * as types from '../shared/types'
+
 export class Input  {
     private keys: Set<string> = new Set<string>();
 
@@ -17,5 +19,14 @@ export class Input  {
 
     public isPressed(code:string):boolean {
         return this.keys.has(code);
+    }
+
+    public getControls(): types.CarControls {
+        return {
+            up: this.isPressed("KeyW"),
+            down: this.isPressed("KeyS"),
+            right: this.isPressed("KeyD"),
+            left: this.isPressed("KeyA"),
+        };
     }
 }
