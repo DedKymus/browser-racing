@@ -1,7 +1,7 @@
 export class Lobby {
     private element: HTMLElement;
 
-    constructor(container: HTMLElement, onJoin: (name:string) => void) {
+    constructor(container: HTMLElement) {
         this.element = document.createElement("div");
         this.element.style.cssText = `
         position: fixed; 
@@ -16,14 +16,16 @@ export class Lobby {
         display: flex; 
         flex-direction: column; 
         gap: 10px;
-        `
+        `;
         this.element.innerHTML = `
         <input type="text" placeholder="Enter your name">
         <button>Найти игру</button>
         <span></span>
-        `
+        `;
         container.appendChild(this.element);
+    }
 
+    public onJoin(callback: (name: string) => void): void {
         const input = this.element.querySelector("input");
         const button = this.element.querySelector("button");
         const status = this.element.querySelector("span");
@@ -31,12 +33,12 @@ export class Lobby {
         button?.addEventListener("click", () => {
             const name = input?.value.trim() || "Player";
 
-            if(status) {
+            if (status) {
                 status.textContent = "Search game...";
             }
             if (button) button.disabled = true;
-            onJoin(name);
-        })
+            callback(name);
+        });
     }
 
     public hide(): void {

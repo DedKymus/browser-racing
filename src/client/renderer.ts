@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as carPhysics from '../shared/car-physics';
+import type * as types from '../shared/types';
 
 export class Renderer {
     private camera: THREE.PerspectiveCamera;
@@ -38,10 +39,10 @@ export class Renderer {
         this.camera.lookAt(0, 0, 0);
     }
 
-    public sync(playerCar: carPhysics.Car, enemyCar: carPhysics.Car | null): void {
-        this.syncCarMesh(this.playerMesh, playerCar);
-        if (enemyCar && this.enemyMesh) {
-            this.syncCarMesh(this.enemyMesh, enemyCar);
+    public sync(state: types.GameState): void {
+        this.syncCarMesh(this.playerMesh, state.you.carState);
+        if (this.enemyMesh) {
+            this.syncCarMesh(this.enemyMesh, state.enemy.carState);
         }
 
         this.camera.position.z = this.playerMesh.position.z + 10;
@@ -53,14 +54,14 @@ export class Renderer {
     }
 
     private createCarMesh(color: number): THREE.Mesh {
-        const geometry = new THREE.BoxGeometry(2, 1, 4);
+        const geometry = new THREE.BoxGeometry(carPhysics.Car.Width, 1, carPhysics.Car.Length);
         const material = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
         return new THREE.Mesh(geometry, material);
     }
 
-    private syncCarMesh(mesh: THREE.Mesh, car: carPhysics.Car): void {
-        mesh.position.x = car.x;
-        mesh.position.z = car.z;
+    private syncCarMesh(mesh: THREE.Mesh, car: types.CarState): void {
+        mesh.position.x = car.position.x;
+        mesh.position.z = car.position.z;
         mesh.rotation.y = car.heading;
     }
 }

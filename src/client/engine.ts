@@ -1,39 +1,45 @@
-import * as input from './input';
-import * as carPhysics from '../shared/car-physics';
-import * as hud from './hud';
-import * as network from './network';
-import * as lobby from './lobby';
-import * as renderer from './renderer';
+import type * as types from '../shared/types';
+import type * as input from './input';
+import type * as hud from './ui/hud';
+import type * as network from './network';
+import type * as lobby from './ui/lobby';
+import type * as renderer from './renderer';
+
+export interface EngineParams {
+    renderer: renderer.Renderer;
+    hud: hud.Hud;
+    lobby: lobby.Lobby;
+    input: input.Input;
+    network: network.NetworkClient;
+}
 
 export class Engine {
     private renderer: renderer.Renderer;
     private hud: hud.Hud;
     private lobby: lobby.Lobby;
-    private input: input.Input = new input.Input();
-    private network: network.NetworkClient = new network.NetworkClient();
+    private input: input.Input;
+    private network: network.NetworkClient;
 
-    private playerCar: carPhysics.Car = new carPhysics.Car(0, 0);
-    private enemyCar: carPhysics.Car | null = null;
-    private isPlaying: boolean = false;
+    private state: types.GameState | null = null;
 
     private lastTime: number = 0;
     private accumulator: number = 0;
     private readonly FIXED_DT: number = 1 / 60;
 
-    constructor(container: HTMLElement) {
-        this.renderer = new renderer.Renderer(container);
-        this.hud = new hud.Hud(container);
+    constructor(params: EngineParams) {
+        this.renderer = params.renderer;
+        this.hud = params.hud;
+        this.lobby = params.lobby;
+        this.input = params.input;
+        this.network = params.network;
 
-        this.lobby = new lobby.Lobby(container, (name) => {
+        this.lobby.onJoin((name) => {
             this.network.connect(name, (state) => {
-                if (!this.isPlaying) {
-                    this.isPlaying = true;
+                if (this.state === null) {
                     this.lobby.hide();
-                    this.enemyCar = new carPhysics.Car(4, 0);
                     this.renderer.startRaceView();
                 }
-                this.playerCar.applyState(state.you.carState);
-                this.enemyCar?.applyState(state.enemy.carState);
+                this.state = state;
             });
         });
     }
@@ -60,14 +66,15 @@ export class Engine {
             this.renderer.render();
         }
 
-        this.hud.update(frameTime, this.playerCar.speed);
+        const currentSpeed = this.state?.you.carState.speed ?? 0;
+        this.hud.update(frameTime, currentSpeed);
         requestAnimationFrame((nextNow) => this.Loop(nextNow));
     }
 
     private update(_dt: number): void {
-        if (!this.isPlaying) return;
+        if (this.state === null) return;
 
         this.network.sendControls(this.input.getControls());
-        this.renderer.sync(this.playerCar, this.enemyCar);
+        this.renderer.sync(this.state);
     }
 }

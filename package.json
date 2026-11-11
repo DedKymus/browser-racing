@@ -20,6 +20,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "pino": "^10.4.0",
+    "pino-pretty": "^13.2.0",
     "three": "^0.187.0",
     "ws": "^8.22.1"
   }
