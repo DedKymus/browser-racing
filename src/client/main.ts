@@ -1,5 +1,5 @@
 import * as engine from './engine';
-import * as renderer from './renderer';
+import * as renderer from './render/renderer';
 import * as hud from './ui/hud';
 import * as lobby from './ui/lobby';
 import * as input from './input';

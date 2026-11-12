@@ -3,7 +3,7 @@ import type * as input from './input';
 import type * as hud from './ui/hud';
 import type * as network from './network';
 import type * as lobby from './ui/lobby';
-import type * as renderer from './renderer';
+import type * as renderer from './render/renderer';
 
 export interface EngineParams {
     renderer: renderer.Renderer;
