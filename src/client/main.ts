@@ -1,7 +1,7 @@
 import * as engine from './engine';
 import * as renderer from './render/renderer';
-import * as hud from './ui/hud';
-import * as lobby from './ui/lobby';
+import * as hud from './render/ui/hud';
+import * as lobby from './render/ui/lobby';
 import * as input from './input';
 import * as network from './network';
 

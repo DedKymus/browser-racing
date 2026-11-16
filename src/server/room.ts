@@ -2,6 +2,7 @@ import * as ws from 'ws'
 import * as carPhysics from '../shared/car-physics';
 import type * as types from '../shared/types';
 import * as logger from './infra/logger'
+import * as chunkManager from '../shared/world/chunk-manager'
 
 export interface RoomParams {
     playerA: ws.WebSocket,
@@ -15,6 +16,9 @@ export interface RoomParams {
 
 
 export class Room {
+    private seed: number;
+    private chunkManager: chunkManager.ChunkManager;
+
     private carPlayerA: carPhysics.Car;
     private carPlayerB: carPhysics.Car;
 
@@ -51,6 +55,9 @@ export class Room {
 
         this.timer = setInterval(() => this.tick(), 1000 / 130)// TODO: fix this to 60 and jerks between packets
 
+        this.seed = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+        this.chunkManager = new chunkManager.ChunkManager(this.seed);
+
         this.playerSocketA.on("close", () => this.stop())
         this.playerSocketB.on("close", () => this.stop())
 
@@ -67,6 +74,9 @@ export class Room {
         let now = performance.now()
         let dt = (now - this.lastTime) / 1000
         this.lastTime = now
+        let leadZ = Math.min(this.carPlayerA.z, this.carPlayerB.z);
+
+        this.chunkManager.update(leadZ);
 
         this.carPlayerA.update(dt, this.controlA)
         this.carPlayerB.update(dt, this.controlB)
@@ -76,8 +86,16 @@ export class Room {
         const stateA = this.carPlayerA.toState();
         const stateB = this.carPlayerB.toState();
 
-        let payloadA:types.GameState = {you: {name: this.nameA, carState: stateA}, enemy: {name: this.nameB, carState: stateB}}
-        let payloadB:types.GameState = {you: {name: this.nameB, carState: stateB}, enemy: {name: this.nameA, carState: stateA}}
+        let payloadA:types.GameState = {
+            you: {name: this.nameA, carState: stateA},
+            enemy: {name: this.nameB, carState: stateB},
+            seed: this.seed
+        }
+        let payloadB: types.GameState = {
+            you: {name: this.nameB, carState: stateB},
+            enemy: {name: this.nameA, carState: stateA},
+            seed: this.seed
+        }
 
         this.playerSocketA.send(JSON.stringify(payloadA))
         this.playerSocketB.send(JSON.stringify(payloadB))

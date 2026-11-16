@@ -1,8 +1,8 @@
 import type * as types from '../shared/types';
 import type * as input from './input';
-import type * as hud from './ui/hud';
+import type * as hud from './render/ui/hud';
 import type * as network from './network';
-import type * as lobby from './ui/lobby';
+import type * as lobby from './render/ui/lobby';
 import type * as renderer from './render/renderer';
 
 export interface EngineParams {
@@ -65,9 +65,7 @@ export class Engine {
         if (shouldRender) {
             this.renderer.render();
         }
-
-        const currentSpeed = this.state?.you.carState.speed ?? 0;
-        this.hud.update(frameTime, currentSpeed);
+        
         requestAnimationFrame((nextNow) => this.Loop(nextNow));
     }
 
