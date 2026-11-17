@@ -1,38 +1,30 @@
 import * as THREE from "three";
 import * as chunkManager from "../../../shared/world/chunk-manager";
-import type * as types from "../../../shared/types";
-import * as toon from "./toon";
 import * as roadModel from "../models/road-model";
 import * as sceneryModel from "../models/scenery-model";
+
+import type * as context from "../context";
+import type * as types from "../../../shared/types";
 
 export class TrackView {
     public mesh: THREE.Group = new THREE.Group();
     private chunkMeshes: Map<number, THREE.Group> = new Map();
     private chunkManager: chunkManager.ChunkManager | null = null;
-    private lobbyRoad: THREE.Group;
 
     private readonly road: roadModel.RoadModel;
     private readonly scenery: sceneryModel.SceneryModel;
 
-    constructor() {
-        const gradientMap = toon.createToonGradient();
-        const inkLineMat = new THREE.LineBasicMaterial({ color: 0x05000a });
+    constructor(materials: context.Materials) {
+        this.road = new roadModel.RoadModel(materials.toonGradient, materials.inkLineMat);
+        this.scenery = new sceneryModel.SceneryModel(materials.toonGradient, materials.inkLineMat);
+    }
 
-        this.road = new roadModel.RoadModel(gradientMap, inkLineMat);
-        this.scenery = new sceneryModel.SceneryModel(gradientMap, inkLineMat);
-
-        this.lobbyRoad = this.createChunkMesh({
-            index: -1,
-            start: 50,
-            end: -50,
-            rails: [],
-        });
-        this.mesh.add(this.lobbyRoad);
+    public buildLobby(): void {
+        this.mesh.add(this.createChunkMesh({ index: -1, start: 50, end: -50, rails: [] }));
     }
 
     public sync(seed: number, playerCordZ: number): void {
         if (this.chunkManager === null) {
-            this.mesh.remove(this.lobbyRoad);
             this.scenery.reset();
             this.chunkManager = chunkManager.create(seed);
         }

@@ -19,7 +19,7 @@ export class Lobby {
         `;
         this.element.innerHTML = `
         <input type="text" placeholder="Enter your name">
-        <button>Найти игру</button>
+        <button>Find a game</button>
         <span></span>
         `;
         container.appendChild(this.element);
@@ -43,5 +43,9 @@ export class Lobby {
 
     public hide(): void {
         this.element.style.display = "none";
+    }
+
+    public show(): void {
+        this.element.style.display = "flex";
     }
 }

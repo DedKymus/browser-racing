@@ -3,15 +3,18 @@ import * as carPhysics from "../../../shared/car-physics";
 import type * as types from "../../../shared/types";
 import type * as audio from "../audio";
 import * as toon from "./toon";
+import * as context from "../context";
 
 export class CarView {
     public mesh: THREE.Group;
+    private materials: context.Materials;
     private sound: THREE.PositionalAudio | null = null;
     private auraGroup: THREE.Group = new THREE.Group();
     private auraShards: { mesh: THREE.Mesh; offsetZ: number; offsetX: number; speed: number }[] = [];
     private animTick: number = 0;
 
-    constructor(color: number) {
+    constructor(color: number, materials: context.Materials) {
+        this.materials = materials;
         this.mesh = this.createCarMesh(color);
     }
 
@@ -19,8 +22,8 @@ export class CarView {
         const carGroup = new THREE.Group();
         const w = carPhysics.Car.Width;
         const l = carPhysics.Car.Length;
-        const gradientMap = toon.createToonGradient();
-        const inkLineMat = new THREE.LineBasicMaterial({ color: 0x000000 });
+        const gradientMap = this.materials.toonGradient;
+        const inkLineMat = this.materials.inkLineMat;
 
         const bodyMaterial = new THREE.MeshToonMaterial({
             color: color,

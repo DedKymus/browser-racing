@@ -4,8 +4,8 @@ export class Hud {
 
 
     private dashboard: HTMLDivElement;
-    private leftBoarder: HTMLDivElement;
-    private rightBoarder: HTMLDivElement;
+    private leftBorder: HTMLDivElement;
+    private rightBorder: HTMLDivElement;
 
     // private frames: number = 0;
     private steps: number = 0;
@@ -19,20 +19,31 @@ export class Hud {
         this.dashboard = document.createElement("div");
         this.dashboard.classList.add(styles["dashboard"]!);
         container.appendChild(this.dashboard);
+        this.dashboard.style.display = "none";
 
         //boarder
-        this.leftBoarder = document.createElement("div");
-        this.leftBoarder.classList.add(styles["leftBoarder"]!);
+        this.leftBorder = document.createElement("div");
+        this.leftBorder.classList.add(styles["leftBorder"]!);
 
 
-        this.rightBoarder = document.createElement("div");
-        this.rightBoarder.classList.add(styles["rightBoarder"]!);
+        this.rightBorder = document.createElement("div");
+        this.rightBorder.classList.add(styles["rightBorder"]!);
 
 
         //metric
     }
 
-    public recordPhysicsStep(): void { this.steps++ }
+    public recordPhysicsStep(): void {
+        this.steps++
+    }
+
+    public show(): void {
+        this.dashboard.style.display = "";
+    }
+
+    public hide(): void {
+        this.dashboard.style.display = "none";
+    }
 
     // public update(frameTimeSec:number, speed:number): void {
     //     this.frames++;

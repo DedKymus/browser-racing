@@ -1,22 +1,16 @@
 import type * as types from '../shared/types';
 import type * as input from './input';
-import type * as hud from './render/ui/hud';
 import type * as network from './network';
-import type * as lobby from './render/ui/lobby';
 import type * as renderer from './render/renderer';
 
 export interface EngineParams {
     renderer: renderer.Renderer;
-    hud: hud.Hud;
-    lobby: lobby.Lobby;
     input: input.Input;
     network: network.NetworkClient;
 }
 
 export class Engine {
     private renderer: renderer.Renderer;
-    private hud: hud.Hud;
-    private lobby: lobby.Lobby;
     private input: input.Input;
     private network: network.NetworkClient;
 
@@ -28,16 +22,13 @@ export class Engine {
 
     constructor(params: EngineParams) {
         this.renderer = params.renderer;
-        this.hud = params.hud;
-        this.lobby = params.lobby;
         this.input = params.input;
         this.network = params.network;
 
-        this.lobby.onJoin((name) => {
+        this.renderer.onJoin((name) => {
             this.network.connect(name, (state) => {
                 if (this.state === null) {
-                    this.lobby.hide();
-                    this.renderer.startRaceView();
+                    this.renderer.showRace();
                 }
                 this.state = state;
             });
@@ -57,7 +48,7 @@ export class Engine {
         let shouldRender = false;
         while (this.accumulator >= this.FIXED_DT) {
             shouldRender = true;
-            this.hud.recordPhysicsStep();
+            this.renderer.recordStep()
             this.update(this.FIXED_DT);
             this.accumulator -= this.FIXED_DT;
         }
@@ -65,7 +56,7 @@ export class Engine {
         if (shouldRender) {
             this.renderer.render();
         }
-        
+
         requestAnimationFrame((nextNow) => this.Loop(nextNow));
     }
 
