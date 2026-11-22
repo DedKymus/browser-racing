@@ -8,7 +8,7 @@ export class AudioManager {
         camera.add(this.listener);
     }
 
-    public createCarSound(mesh: THREE.Object3D, url: string = "audio/engine.wav"): THREE.PositionalAudio {
+    public createCarSound(mesh: THREE.Object3D, url: string = "audio/engine.m4a"): THREE.PositionalAudio {
         const positionAudio = new THREE.PositionalAudio(this.listener)
         positionAudio.setRefDistance(5);
         positionAudio.setLoop(true);

@@ -7,6 +7,7 @@ import * as lobby from "../ui/lobby";
 
 import type * as context from "../context";
 import type * as view from "./view";
+import type * as types from  "../../../shared/types"
 
 
 export class LobbyView implements view.View {
@@ -24,7 +25,7 @@ export class LobbyView implements view.View {
         this.scene = sceneSetup.createScene().scene;
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.set(-18, 4, 2);
-        this.camera.lookAt(0, 2, 0);
+        this.camera.lookAt(0, 6, 0);
         this.track = new trackView.TrackView(ctx.materials);
         this.track.buildLobby();
         this.car = new carView.CarView(0x00ff00, ctx.materials);
@@ -32,8 +33,12 @@ export class LobbyView implements view.View {
         this.scene.add(this.car.mesh);
     }
 
-    public onJoin(callback: (name: string) => void): void {
+    public onJoin(callback: (req: types.JoinRequest) => void): void {
         this.ui.onJoin(callback);
+    }
+
+    public setStatus(text: string): void {
+        this.ui.setStatus(text);
     }
 
     public enter(): void {

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import * as carPhysics from "../../../shared/car-physics";
+import * as CONST from "../../../shared/constants";
 import type * as types from "../../../shared/types";
 import type * as audio from "../audio";
 import * as toon from "./toon";
@@ -20,8 +20,8 @@ export class CarView {
 
     private createCarMesh(color: number): THREE.Group {
         const carGroup = new THREE.Group();
-        const w = carPhysics.Car.Width;
-        const l = carPhysics.Car.Length;
+        const w = CONST.WIDTH;
+        const l = CONST.LENGTH;
         const gradientMap = this.materials.toonGradient;
         const inkLineMat = this.materials.inkLineMat;
 
@@ -117,18 +117,18 @@ export class CarView {
 
     public syncCarMesh(car: types.CarState): void {
         if (this.sound && this.sound.isPlaying) {
-            this.sound.setPlaybackRate(car.speed / 25);
+            this.sound.setPlaybackRate(car.speed / CONST.SPEED_BASE);
         }
         this.mesh.position.x = car.position.x;
         this.mesh.position.z = car.position.z;
         this.mesh.rotation.y = car.heading;
 
         this.animTick += 0.2;
-        const speedRatio = Math.max(0.5, car.speed / 25);
+        const speedRatio = Math.max(0.5, car.speed / CONST.SPEED_BASE);
         for (let i = 0; i < this.auraShards.length; i++) {
             const item = this.auraShards[i]!;
             const cycle = (this.animTick * item.speed * speedRatio + i * 0.3) % 2.4;
-            item.mesh.position.z = carPhysics.Car.Length / 2 + cycle;
+            item.mesh.position.z = CONST.LENGTH / 2 + cycle;
             item.mesh.position.x = item.offsetX + Math.sin(this.animTick + i) * 0.12;
             const scale = Math.max(0.1, (1 - cycle / 2.4) * speedRatio);
             item.mesh.scale.set(scale, scale, scale * 1.4);

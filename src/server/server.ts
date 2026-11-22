@@ -11,7 +11,9 @@ export class GameServer {
     private httpServer!: http.Server;
     private wsServer!: ws.WebSocketServer;
     private waitingPlayer: { socket: ws.WebSocket; name: string } | null = null;
+
     private rooms: Set<room.Room> = new Set();
+    private privateRooms: Map<string, { socket: ws.WebSocket; name: string }> = new Map();
 
     constructor(cfg: config.ServerConfig, logger: logger.Logger) {
         this.config = cfg;
@@ -37,27 +39,35 @@ export class GameServer {
         this.wsServer.on("connection", (socket, req) => {
             const url = new URL(req.url ?? "", "http://localhost");
             const name = url.searchParams.get("name") || "Player";
-            if (this.waitingPlayer === null) {
-                this.waitingPlayer = {socket, name};
-                socket.on("close", () => {
-                    if (this.waitingPlayer?.socket === socket) {
-                        this.waitingPlayer = null;
-                    }
-                })
-            } else {
-                let roomParams: room.RoomParams = {
-                    playerA: this.waitingPlayer.socket,
-                    playerB: socket,
-                    nameA: this.waitingPlayer.name,
-                    nameB: name,
-                    logger: this.logger,
-                    onClose: () => {
-                        this.rooms.delete(gameRoom);
-                    }
+            const mode = url.searchParams.get("mode") || "random";
+            const roomCode = url.searchParams.get("room") || "";
+            if (mode === "create") {
+                const code = String(Math.floor(1000 + Math.random() * 9000));
+                this.privateRooms.set(code, { socket, name });
+                socket.send(JSON.stringify({ roomCode: code }));
+                socket.on("close", () => this.privateRooms.delete(code));
+
+            } else if (mode === "join"){
+                const host = this.privateRooms.get(roomCode);
+                if (!host) {
+                    socket.close();
+                    return;
                 }
-                const gameRoom = new room.Room(roomParams);
-                this.rooms.add(gameRoom);
-                this.waitingPlayer = null;
+                this.privateRooms.delete(roomCode);
+                this.createRoom(host,{socket,name})
+            }else {
+                if (this.waitingPlayer === null) {
+                    this.waitingPlayer = {socket, name};
+                    socket.on("close", () => {
+                        if (this.waitingPlayer?.socket === socket) {
+                            this.waitingPlayer = null;
+                        }
+                    })
+                }else {
+                    this.createRoom(this.waitingPlayer, { socket, name });
+                    this.waitingPlayer = null;
+                }
+                
             }
         })
     }
@@ -79,5 +89,19 @@ export class GameServer {
         }
         this.wsServer.close()
         this.httpServer.close(() => process.exit(0))
+    }
+
+    private createRoom(playerA: { socket: ws.WebSocket; name: string }, playerB: { socket: ws.WebSocket; name: string }) {
+        const gameRoom = new room.Room({
+            playerA: playerA.socket,
+            playerB: playerB.socket,
+            nameA: playerA.name,
+            nameB: playerB.name,
+            logger: this.logger,
+            onClose: () => {
+                this.rooms.delete(gameRoom);
+            },
+        });
+        this.rooms.add(gameRoom);
     }
 }

@@ -25,13 +25,19 @@ export class Engine {
         this.input = params.input;
         this.network = params.network;
 
-        this.renderer.onJoin((name) => {
-            this.network.connect(name, (state) => {
-                if (this.state === null) {
-                    this.renderer.showRace();
+        this.renderer.onJoin((data:types.JoinRequest) => {
+            this.network.connect(
+                data,
+                (state) => {
+                    if (this.state === null) {
+                        this.renderer.showRace();
+                    }
+                    this.state = state;
+                },
+                (code) => {
+                    this.renderer.setLobbyStatus("Room code: " + code);
                 }
-                this.state = state;
-            });
+            );
         });
     }
 

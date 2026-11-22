@@ -1,8 +1,10 @@
 import * as ws from 'ws'
 import * as carPhysics from '../shared/car-physics';
+import * as CONST from '../shared/constants';
 import type * as types from '../shared/types';
 import * as logger from './infra/logger'
 import * as chunkManager from '../shared/world/chunk-manager'
+import * as trafficManager from '../shared/world/traffic-manager'
 
 export interface RoomParams {
     playerA: ws.WebSocket,
@@ -18,6 +20,7 @@ export interface RoomParams {
 export class Room {
     private seed: number;
     private chunkManager: chunkManager.ChunkManager;
+    private trafficManager: trafficManager.TrafficManager;
 
     private carPlayerA: carPhysics.Car;
     private carPlayerB: carPhysics.Car;
@@ -44,8 +47,8 @@ export class Room {
         this.logger = params.logger;
         this.logger.info("Room started", { playerA: params.nameA, playerB: params.nameB });
 
-        this.carPlayerA = new carPhysics.Car(-2, 0);
-        this.carPlayerB = new carPhysics.Car(2, 0);
+        this.carPlayerA = new carPhysics.Car(CONST.LANES[0], 0);
+        this.carPlayerB = new carPhysics.Car(CONST.LANES[1], 0);
 
         this.nameA = params.nameA;
         this.nameB = params.nameB;
@@ -56,7 +59,8 @@ export class Room {
         this.timer = setInterval(() => this.tick(), 1000 / 130)// TODO: fix this to 60 and jerks between packets
 
         this.seed = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
-        this.chunkManager = new chunkManager.ChunkManager(this.seed);
+        this.chunkManager = chunkManager.create(this.seed);
+        this.trafficManager = trafficManager.create();
 
         this.playerSocketA.on("close", () => this.stop())
         this.playerSocketB.on("close", () => this.stop())
@@ -77,11 +81,16 @@ export class Room {
         let leadZ = Math.min(this.carPlayerA.z, this.carPlayerB.z);
 
         this.chunkManager.update(leadZ);
+        this.trafficManager.update(dt, leadZ);
+        const traffic = this.trafficManager.getBots();
 
         this.carPlayerA.update(dt, this.controlA)
         this.carPlayerB.update(dt, this.controlB)
 
         carPhysics.resolveCarCollision(this.carPlayerA, this.carPlayerB)
+
+        carPhysics.resolveBotCollision(this.carPlayerA, traffic);
+        carPhysics.resolveBotCollision(this.carPlayerB, traffic);
 
         const stateA = this.carPlayerA.toState();
         const stateB = this.carPlayerB.toState();
@@ -89,12 +98,14 @@ export class Room {
         let payloadA:types.GameState = {
             you: {name: this.nameA, carState: stateA},
             enemy: {name: this.nameB, carState: stateB},
-            seed: this.seed
+            seed: this.seed,
+            traffic:traffic,
         }
         let payloadB: types.GameState = {
             you: {name: this.nameB, carState: stateB},
             enemy: {name: this.nameA, carState: stateA},
-            seed: this.seed
+            seed: this.seed,
+            traffic:traffic,
         }
 
         this.playerSocketA.send(JSON.stringify(payloadA))

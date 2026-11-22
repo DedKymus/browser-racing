@@ -15,7 +15,13 @@ export interface GameState {
     you :{name:string , carState:CarState};
     enemy :{name:string , carState:CarState};
     seed: number;
+    traffic: BotTrafficCar[]
 }
+
+export type JoinRequest =
+    | { mode: "random"; name: string }
+    | { mode: "join"; name: string; room: string }
+    | { mode: "create"; name: string };
 
 //World
 export interface Chunk {
@@ -23,6 +29,13 @@ export interface Chunk {
     start: number;
     end: number;
     rails: Rail[];
+}
+
+export interface BotTrafficCar {
+    id: number;
+    lane:number;
+    position:Point;
+    speed:number;
 }
 
 export interface Point {

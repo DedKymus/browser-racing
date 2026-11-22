@@ -1,0 +1,42 @@
+.dashboard {
+    position: fixed;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    width: 440px;
+    height: 100px;
+    pointer-events: none;
+    font-family: Impact, "Arial Black", sans-serif;
+    color: #fff;
+
+    filter:
+            drop-shadow(3px 0 0 #000)
+            drop-shadow(-3px 0 0 #000)
+            drop-shadow(0 -3px 0 #000)
+            drop-shadow(0 8px 0 #000);
+}
+
+.dashboard::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #ffd700;
+    clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%);
+}
+
+
+.dashboard::after {
+    content: "";
+    position: absolute;
+    inset: 5px 5px 0 5px;
+    background:
+            repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0 8px, transparent 8px 16px),
+            linear-gradient(160deg, #2a0f4d, #12062b);
+    clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%);
+}
+
+
+.dashboard > * {
+    position: relative;
+    z-index: 1;
+}

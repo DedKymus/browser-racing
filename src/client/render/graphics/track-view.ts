@@ -20,12 +20,32 @@ export class TrackView {
     }
 
     public buildLobby(): void {
-        this.mesh.add(this.createChunkMesh({ index: -1, start: 50, end: -50, rails: [] }));
+        const lobbyRng = chunkManager.create(42);
+        const lobbyChunks: types.Chunk[] = [
+            { index: -6, start: 300, end: 200, rails: [] },
+            { index: -5, start: 200, end: 100, rails: [] },
+            { index: -4, start: 100, end: 0, rails: [] },
+            { index: -3, start: 0, end: -100, rails: [] },
+            { index: -2, start: -100, end: -200, rails: [] },
+            { index: -1, start: -200, end: -300, rails: [] },
+        ];
+
+        for (const chunk of lobbyChunks) {
+            const group = new THREE.Group();
+            this.road.build(group, chunk);
+            this.scenery.populateChunk(
+                group,
+                chunk,
+                this.road.roadWidth,
+                () => lobbyRng.nextRandom(),
+                true
+            );
+            this.mesh.add(group);
+        }
     }
 
     public sync(seed: number, playerCordZ: number): void {
         if (this.chunkManager === null) {
-            this.scenery.reset();
             this.chunkManager = chunkManager.create(seed);
         }
         this.chunkManager.update(playerCordZ);
@@ -45,8 +65,6 @@ export class TrackView {
                 this.chunkMeshes.delete(index);
             }
         }
-
-        this.scenery.animate();
     }
 
     private createChunkMesh(chunk: types.Chunk): THREE.Group {

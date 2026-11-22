@@ -1,20 +1,15 @@
 import type * as types from "./types";
+import * as CONST from "./constants";
 
 export class Car {
     public x: number = 0;
     public z: number = 0;
     public heading: number = 0;
-    public speed: number = 25;
-
-    private readonly SpeedBase = 25;
-    private readonly SpeedUp = 33;
-    private readonly SpeedDown = 18;
-    private readonly TurnRate = 2.0;
-    private readonly MaxHeading = Math.PI / 4;
+    public speed: number = CONST.SPEED_BASE;
 
     public pushVx: number = 0;
-    public static readonly Width = 2.0;
-    public static readonly Length = 4.0;
+    public static readonly Width = CONST.WIDTH;
+    public static readonly Length = CONST.LENGTH;
 
     constructor(startX: number = 0, startZ: number = 0) {
         this.x = startX;
@@ -22,12 +17,12 @@ export class Car {
     }
 
     public update(dt: number, controls: types.CarControls): void {
-        let targetSpeed = this.SpeedBase;
+        let targetSpeed = CONST.SPEED_BASE;
 
         if (controls.up) {
-            targetSpeed = this.SpeedUp;
+            targetSpeed = CONST.SPEED_UP;
         } else if (controls.down) {
-            targetSpeed = this.SpeedDown;
+            targetSpeed = CONST.SPEED_DOWN;
         }
 
         this.speed += (targetSpeed - this.speed) * 5 * dt;
@@ -37,17 +32,25 @@ export class Car {
 
         this.pushVx *= Math.max(0, 1 - 4 * dt);
 
-        // there was a bug here))
-
         if (controls.left) {
-            this.heading += this.TurnRate * dt;
+            this.heading += CONST.TURN_RATE * dt;
         } else if (controls.right) {
-            this.heading -= this.TurnRate * dt;
+            this.heading -= CONST.TURN_RATE * dt;
         } else {
             this.heading *= (1 - 5 * dt);
         }
 
-        this.heading = Math.max(-this.MaxHeading, Math.min(this.MaxHeading, this.heading));
+        this.heading = Math.max(-CONST.MAX_HEADING, Math.min(CONST.MAX_HEADING, this.heading));
+
+        // logic of the border
+        const maxX = CONST.ROAD_WIDTH / 2 - CONST.WIDTH / 2;
+        if (Math.abs(this.x) > maxX) {
+            const side = this.x > 0 ? 1 : -1;
+            this.x = side * maxX;
+            this.pushVx = -side * 8;
+            this.heading *= 0.3;
+            this.speed *= 0.85;
+        }
     }
 
     public toState(): types.CarState {
@@ -100,4 +103,36 @@ export function resolveCarCollision(carA: Car, carB: Car) {
         }
     }
 
+}
+
+export function resolveBotCollision(car: Car, bots: types.BotTrafficCar[]): void {
+    for (const bot of bots) {
+        const dx = car.x - bot.position.x;
+        const dz = car.z - bot.position.z;
+
+        const overlapX = Car.Width - Math.abs(dx);
+        const overlapZ = Car.Length - Math.abs(dz);
+
+        if (overlapX <= 0 || overlapZ <= 0) {
+            continue;
+        }
+
+        if (overlapX < overlapZ) {
+            const pushDirectionX = dx >= 0 ? 1 : -1;
+            car.x += overlapX * pushDirectionX;
+
+            const sideSpeed = -Math.sin(car.heading) * car.speed;
+            car.pushVx = -sideSpeed * 0.6 + pushDirectionX * 8;
+            car.heading *= 0.3;
+        } else {
+            const pushDirectionZ = dz >= 0 ? 1 : -1;
+            car.z += overlapZ * pushDirectionZ;
+
+            if (pushDirectionZ > 0) {
+                car.speed = Math.min(car.speed, bot.speed * 0.7);
+            } else {
+                car.speed = Math.max(car.speed, bot.speed * 1.1);
+            }
+        }
+    }
 }

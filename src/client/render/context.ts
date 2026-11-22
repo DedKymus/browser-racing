@@ -18,6 +18,7 @@ export function createContext(container: HTMLElement): RenderContext {
     webgl.setPixelRatio(window.devicePixelRatio);
     webgl.shadowMap.enabled = true;
     webgl.shadowMap.type = THREE.BasicShadowMap;
+    webgl.shadowMap.autoUpdate = false;
     container.appendChild(webgl.domElement);
 
     const materials: Materials = {

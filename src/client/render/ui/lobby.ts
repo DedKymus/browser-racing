@@ -1,51 +1,90 @@
+import styles from "./lobby.module.css";
+
+export type JoinRequest =
+    | { mode: "random"; name: string }
+    | { mode: "join"; name: string; room: string }
+    | { mode: "create"; name: string };
+
 export class Lobby {
-    private element: HTMLElement;
+    private menu: HTMLElement;
+    private nameInput: HTMLInputElement;
+    private roomInput: HTMLInputElement;
+    private status: HTMLElement;
+    private buttons: HTMLButtonElement[];
 
     constructor(container: HTMLElement) {
-        this.element = document.createElement("div");
-        this.element.style.cssText = `
-        position: fixed; 
-        top: 44%; 
-        right: 43%; 
-        transform:translateY(-50%); 
-        padding: 20px; 
-        background: rgba(0, 0, 0, 0.8); 
-        border: 1px solid #00ff00; 
-        color: #00ff00; 
-        font-family: monospace; 
-        display: flex; 
-        flex-direction: column; 
-        gap: 10px;
+        this.menu = document.createElement("div");
+        this.menu.classList.add(styles["menu"]!);
+        this.menu.innerHTML = `
+            <h1>Road Race</h1>
+            <input type="text" data-role="name" placeholder="Enter your name">
+
+            <button data-role="random">Find random player</button>
+
+            <div data-role="divider">or play with friends</div>
+
+            <input type="text" data-role="room-code" placeholder="Room code">
+            <div data-role="row">
+                <button data-role="join">Join room</button>
+                <button data-role="create">Create room</button>
+            </div>
+
+            <span data-role="status"></span>
         `;
-        this.element.innerHTML = `
-        <input type="text" placeholder="Enter your name">
-        <button>Find a game</button>
-        <span></span>
-        `;
-        container.appendChild(this.element);
+        container.appendChild(this.menu);
+
+        this.nameInput = this.menu.querySelector('[data-role="name"]')!;
+        this.roomInput = this.menu.querySelector('[data-role="room-code"]')!;
+        this.status = this.menu.querySelector('[data-role="status"]')!;
+        this.buttons = Array.from(this.menu.querySelectorAll("button"));
     }
 
-    public onJoin(callback: (name: string) => void): void {
-        const input = this.element.querySelector("input");
-        const button = this.element.querySelector("button");
-        const status = this.element.querySelector("span");
+    public onJoin(callback: (req: JoinRequest) => void): void {
+        const name = () => this.nameInput.value.trim() || "Player";
 
-        button?.addEventListener("click", () => {
-            const name = input?.value.trim() || "Player";
+        this.on("random", () => {
+            this.setSearching("Searching for opponent...");
+            callback({ mode: "random", name: name() });
+        });
 
-            if (status) {
-                status.textContent = "Search game...";
+        this.on("join", () => {
+            const room = this.roomInput.value.trim();
+            if (room === "") {
+                this.status.textContent = "Enter room code";
+                return;
             }
-            if (button) button.disabled = true;
-            callback(name);
+            this.setSearching("Joining room...");
+            callback({ mode: "join", name: name(), room });
+        });
+
+        this.on("create", () => {
+            this.setSearching("Creating room...");
+            callback({ mode: "create", name: name() });
         });
     }
 
+    private on(role: string, handler: () => void): void {
+        this.menu
+            .querySelector(`[data-role="${role}"]`)
+            ?.addEventListener("click", handler);
+    }
+
+    private setSearching(text: string): void {
+        this.status.textContent = text;
+        this.buttons.forEach((b) => (b.disabled = true));
+    }
+
+    public setStatus(text: string): void {
+        this.status.textContent = text;
+    }
+
     public hide(): void {
-        this.element.style.display = "none";
+        this.menu.style.display = "none";
     }
 
     public show(): void {
-        this.element.style.display = "flex";
+        this.menu.style.display = "flex";
+        this.status.textContent = "";
+        this.buttons.forEach((b) => (b.disabled = false));
     }
 }

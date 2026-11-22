@@ -22,8 +22,12 @@ export class Renderer  {
 
     }
 
-    public onJoin(callback: (name:string) => void): void {
+    public onJoin(callback: (data: types.JoinRequest) => void): void {
         this.lobby.onJoin(callback);
+    }
+
+    public setLobbyStatus(text: string): void {
+        this.lobby.setStatus(text);
     }
 
     public recordStep(): void {
